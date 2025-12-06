@@ -1,9 +1,11 @@
 data/*
 !/data/README.md
+
 models/*
-!/models/best_model.pth
+
 output/*
 !/output/README.md
+
 notebooks/
 
 __pycache__
