@@ -1,5 +1,8 @@
+> [!IMPORTANT]
+> If you'd like to run this code, you will have to gain access to the DiaTrend dataset at [DiaTrend@Synapse](https://www.synapse.org/Synapse:syn38187184/wiki/619490).
+
 ## How the code is structured:
-The `data` folder holds the original and cleaned dataset. 
+The `data` folder would hold the original and cleaned datasets.
 The original dataset is a set of 54 .xlxs files. 
 The cleaned dataset is a single subject's cleaned data that can be trained on by the model.
 
@@ -10,10 +13,10 @@ The cleaned dataset is a single subject's cleaned data that can be trained on by
 The `models` folder holds different trained models. 
 The file naming structure indicates the model architecture and model training specifics.
 
-The `src` folder holds the model.py, train.py and clean_data.py scripts. 
-model.py is the PyTorch model object. 
-train.py is a one-off script w/ argument parsing for CLI training. 
-clean_data.py is a one-off script w/ argument parsing for CLI data cleaning.
+The `src` folder holds the `model.py`, `train.py` and `clean_data.py` scripts. 
+`model.py` is the PyTorch model object. 
+`train.py` is a one-off script w/ argument parsing for CLI training. 
+`clean_data.py` is a one-off script w/ argument parsing for CLI data cleaning.
 
 ## How to run the code:
 
