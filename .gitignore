@@ -15,3 +15,5 @@ __pycache__
 .idea
 
 venv/
+
+eda.ipynb

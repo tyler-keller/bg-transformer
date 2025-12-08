@@ -9,7 +9,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--subject_id', type=int, default=5)
     parser.add_argument('--input_dir', default='data/original')
-    parser.add_argument('--output_dir', default='data/cleaned')
+    parser.add_argument('--sdv_save_dir', default='data/sdv')
+    parser.add_argument('--ml_save_dir', default='data/ml')
     args = parser.parse_args()
 
     print(f"processing subject {args.subject_id}...")
@@ -19,6 +20,8 @@ def main():
     xls = pd.read_excel(file_path, None)
     cgm_df = xls['CGM']
     bolus_df = xls['Bolus']
+    print(bolus_df.head())
+    print(bolus_df.describe())
 
     # 2. standardize time
     cgm_df['date'] = pd.to_datetime(cgm_df['date']).dt.floor('5min')
@@ -48,6 +51,8 @@ def main():
     # get list of (time, dose) tuples for efficiency
     bolus_events = merged[merged['normal'] > 0][['date', 'normal']].values.tolist()
     merged['iob'] = calculate_iob_slow(merged, bolus_events)
+    print(merged.head())
+    print(merged['iob'].describe())
 
     # 6. time features
     merged['hour'] = merged['date'].dt.hour
@@ -61,8 +66,10 @@ def main():
     merged['segment_id'] = breaks.cumsum()
 
     # 8. feature engineering & save
-    save_path = os.path.join(args.output_dir, str(args.subject_id))
-    os.makedirs(save_path, exist_ok=True)
+    sdv_save_path = os.path.join(args.sdv_save_dir, str(args.subject_id))
+    ml_save_path = os.path.join(args.ml_save_dir, str(args.subject_id))
+    os.makedirs(sdv_save_path, exist_ok=True)
+    os.makedirs(ml_save_path, exist_ok=True)
     
     segment_counts = merged['segment_id'].value_counts()
     valid_segments = segment_counts[segment_counts >= 12].index # keep > 1 hour
@@ -70,7 +77,14 @@ def main():
     count = 0
     for seg_id in tqdm(valid_segments, desc="saving segments"):
         segment = merged[merged['segment_id'] == seg_id].copy().sort_values('date')
-        
+
+        # --- save path A: sdv ready (clean, no heavy encoding) ---
+        # keeping 'normal' (bolus) and real 'date' for generative models
+        sdv_cols = ['date', 'mg/dl', 'normal', 'iob'] 
+        sdv_df = segment[sdv_cols]
+        sdv_df.to_csv(os.path.join(sdv_save_path, f'{count}.csv'), index=False)
+
+        # --- save path B: ml ready (cyclic + one hot) ---
         # cyclic encoding
         segment = add_cyclic_features(segment)
         
@@ -78,13 +92,27 @@ def main():
         for d in range(7):
             segment[f'dow_{d}'] = (segment['dayofweek'] == d).astype(float)
 
-        # select final columns
-        cols = ['mg/dl', 'iob', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos'] + [f'dow_{d}' for d in range(7)]
+        # select final columns for ml (dropping date and raw bolus usually)
+        ml_cols = ['mg/dl', 'iob', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos'] + [f'dow_{d}' for d in range(7)]
         
         # float32 for model
-        final_df = segment[cols].astype(np.float32)
+        ml_df = segment[ml_cols].astype(np.float32)
+        ml_df.to_csv(os.path.join(ml_save_path, f'{count}.csv'), index=False)
         
-        final_df.to_csv(os.path.join(save_path, f'{count}.csv'), index=False)
+        # # cyclic encoding
+        # segment = add_cyclic_features(segment)
+        
+        # # one-hot day of week
+        # for d in range(7):
+        #     segment[f'dow_{d}'] = (segment['dayofweek'] == d).astype(float)
+
+        # # select final columns
+        # cols = ['mg/dl', 'iob', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos'] + [f'dow_{d}' for d in range(7)]
+        
+        # # float32 for model
+        # final_df = segment[cols].astype(np.float32)
+        
+        # final_df.to_csv(os.path.join(save_path, f'{count}.csv'), index=False)
         count += 1
 
 if __name__ == '__main__':
