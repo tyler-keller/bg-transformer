@@ -26,8 +26,11 @@ def main():
     
     # 3. interpolate gaps <= 60 mins
     print(cgm_df.head())
-    cgm_df = cgm_df.reset_index(drop=True)
-    cgm_df = cgm_df.set_index('date').resample('5min').asfreq()
+    print(cgm_df.duplicated('date').sum())
+    print(cgm_df[cgm_df.duplicated('date', keep=False)].sort_values('date').head())
+    print(cgm_df.groupby('date').size().head())
+    # keeping the mean of duplicates dates
+    cgm_df = cgm_df.set_index('date').resample('5min').mean()
     # linear interpolate valid gaps (limit=12 means 1 hour of 5 min chunks)
     cgm_df['mg/dl'] = cgm_df['mg/dl'].interpolate(method='linear', limit=12)
     cgm_df = cgm_df.reset_index()

@@ -2,6 +2,7 @@ import argparse
 import os
 import torch
 import logging
+import uuid
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from diatrend.model import GlucoseTransformer
@@ -100,14 +101,17 @@ def train():
     rmse = calculate_rmse(preds, targets)
     logger.info(f"test rmse: {rmse:.2f} mg/dl")
     
+    uuid_str = str(uuid.uuid4())
+
     # plot
     os.makedirs(args.output_dir, exist_ok=True)
-    plot_path = os.path.join(args.output_dir, 'clarke_grid.png')
+    plot_path = os.path.join(args.output_dir, f'clarke_grid_{uuid_str}.png')
     plot_clarke_grid(preds, targets, save_path=plot_path)
 
     # save comprehensive checkpoint
     checkpoint = {
         'state_dict': model.state_dict(),
+        'id': uuid_str,
         'config': {
             'input_dim': input_dim,
             'seq_len': args.seq_len,

@@ -83,6 +83,8 @@ else:
     results = pd.DataFrame({'actual': y_trues, 'predicted': preds_mgdl})
     
     st.line_chart(results)
+
+    st.image(image=f'outputs/clarke_grid_{config["id"]}.png')
     
     # metrics
     rmse = np.sqrt(np.mean((results['actual'] - results['predicted'])**2))
