@@ -8,8 +8,8 @@ from diatrend.features import calculate_iob_slow, add_cyclic_features
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--subject_id', type=int, default=5)
-    parser.add_argument('--input_dir', default='../data/original')
-    parser.add_argument('--output_dir', default='../data/cleaned')
+    parser.add_argument('--input_dir', default='data/original')
+    parser.add_argument('--output_dir', default='data/cleaned')
     args = parser.parse_args()
 
     print(f"processing subject {args.subject_id}...")
@@ -25,6 +25,8 @@ def main():
     bolus_df['date'] = pd.to_datetime(bolus_df['date']).dt.floor('5min')
     
     # 3. interpolate gaps <= 60 mins
+    print(cgm_df.head())
+    cgm_df = cgm_df.reset_index(drop=True)
     cgm_df = cgm_df.set_index('date').resample('5min').asfreq()
     # linear interpolate valid gaps (limit=12 means 1 hour of 5 min chunks)
     cgm_df['mg/dl'] = cgm_df['mg/dl'].interpolate(method='linear', limit=12)

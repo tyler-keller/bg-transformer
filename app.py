@@ -15,8 +15,8 @@ st.set_page_config(page_title="diatrend", layout="wide")
 st.title("diatrend model viewer")
 
 # setup paths
-MODELS_DIR = '../models'
-DATA_DIR = '../data/cleaned/5' # hardcoded for demo, make dynamic as needed
+MODELS_DIR = 'models'
+DATA_DIR = 'data/cleaned/slow_iob/5' # hardcoded for demo, make dynamic as needed
 
 if not os.path.exists(MODELS_DIR):
     st.error("models dir not found")
@@ -45,6 +45,7 @@ def load_checkpoint(path):
 
 try:
     model, config, scaler = load_checkpoint(model_path)
+    # model = load_checkpoint(model_path)
     st.sidebar.success("model loaded")
     st.sidebar.json(config)
     st.sidebar.write("scaler stats:", scaler)

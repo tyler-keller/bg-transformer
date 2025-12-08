@@ -48,6 +48,9 @@ class GlucoseTransformer(nn.Module):
         self.input_dim = input_dim
         self.seq_len = seq_len
         self.embedding_dim = embedding_dim
+        self.num_heads = num_heads
+        self.ff_dim = ff_dim
+        self.dropout = dropout
         
         # layers
         self.embedding = nn.Linear(input_dim, embedding_dim)

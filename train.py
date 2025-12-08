@@ -2,6 +2,7 @@ import argparse
 import os
 import torch
 import logging
+from tqdm import tqdm
 from torch.utils.data import DataLoader
 from diatrend.model import GlucoseTransformer
 from diatrend.data import load_and_window_data, GlucoseDataset
@@ -13,7 +14,8 @@ logger = logging.getLogger("trainer")
 def train():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', required=True)
-    parser.add_argument('--output_dir', default='../models')
+    parser.add_argument('--output_dir', default='outputs')
+    parser.add_argument('--model_dir', default='models')
     parser.add_argument('--seq_len', type=int, default=12) # 1 hour context
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=64)
@@ -53,9 +55,10 @@ def train():
     best_val_loss = float('inf')
     
     for epoch in range(args.epochs):
+        logger.info(f"epoch {epoch+1}/{args.epochs}")
         model.train()
         train_loss = 0
-        for x, y in train_loader:
+        for x, y in tqdm(train_loader):
             x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
             pred = model(x)
@@ -109,6 +112,9 @@ def train():
             'input_dim': input_dim,
             'seq_len': args.seq_len,
             'emb_dim': model.embedding_dim,
+            'num_heads': model.num_heads,
+            'ff_dim': model.ff_dim,
+            'dropout': model.dropout,
         },
         'scaler': {
             'mu': float(train_ds.mu),
@@ -117,7 +123,7 @@ def train():
         'metrics': {'rmse': rmse}
     }
     
-    save_path = os.path.join(args.output_dir, 'model_checkpoint.pth')
+    save_path = os.path.join(args.output_dir, f'bg_transformer_epochs_{args.epochs}_batch_{args.batch_size}_lr_{args.lr}_seq_{args.seq_len}_emb_{model.embedding_dim}_numheads_{model.num_heads}_ffdim_{model.ff_dim}_testrmse_{rmse:.0f}.pth')
     torch.save(checkpoint, save_path)
     logger.info(f"saved model to {save_path}")
 
