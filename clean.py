@@ -28,10 +28,6 @@ def main():
     bolus_df['date'] = pd.to_datetime(bolus_df['date']).dt.floor('5min')
     
     # 3. interpolate gaps <= 60 mins
-    print(cgm_df.head())
-    print(cgm_df.duplicated('date').sum())
-    print(cgm_df[cgm_df.duplicated('date', keep=False)].sort_values('date').head())
-    print(cgm_df.groupby('date').size().head())
     # keeping the mean of duplicates dates
     cgm_df = cgm_df.set_index('date').resample('5min').mean()
     # linear interpolate valid gaps (limit=12 means 1 hour of 5 min chunks)

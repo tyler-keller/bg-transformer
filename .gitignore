@@ -3,8 +3,8 @@ data/*
 
 models/*
 
-output/*
-!/output/README.md
+outputs/*
+!/outputs/README.md
 
 notebooks/
 
